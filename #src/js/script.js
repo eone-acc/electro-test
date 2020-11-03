@@ -14,8 +14,7 @@ let currentQuestionUserData = {
   // qID: {userAnswer: [],}
 }
 
-
-
+let finished = false; //отвечает за завещрение логики теста
 
 const pushDataOfDBToStorage = async () => {
   await fetch(dbUrl)
@@ -56,8 +55,7 @@ function markingConfirmedAns(itemToBlock) {
     tickMark.style.opacity = '1';
     answerListElements.forEach(item => {    
     if(itemToBlock[0].userAnswers.includes(+item.dataset.answerIndex)) {
-      item.classList.toggle('question-body__item-checked');
-      
+      item.classList.toggle('question-body__item-checked');      
     }    
   })
 }
@@ -76,9 +74,11 @@ async function appendToStorage(storageDataKey, storageDataValue) {
     oldStorageDataValue.forEach(item => {
       newObj.push(item)
     })
-    newObj.push(storageDataValue)
-    console.log('assinned', newObj)
+    newObj.push(storageDataValue)    
     setLocalStorage(storageDataKey, newObj)
+    if (getLocalStorage('userData').length === getLocalStorage('allQuestion').length ) {
+      finished = true;
+    }
   }
 }
 
@@ -130,9 +130,20 @@ const renderQuestion = async (data) => {
 
 //Рендерит блок с вопросом по индексу, который принимает в вызове функции из массива, который вернула функция getAllDataOfDB()
 const reRenderCurrentQuestion = async (idx) => {
+  if (getLocalStorage('userData').length === getLocalStorage('allQuestion').length ) {
+    finished = true;
+  }
   await renderQuestion(storageData[idx])
   answerListElements = document.querySelectorAll('.question-body__item')
-  if (answerListElements) {
+
+  if (finished) {
+    const comparisonUserData = await finishTest().userAnswers.filter(i => i.qID === currentQuestionIndex )
+    const comparisonCorrectData = await finishTest().correctData.filter(i => i.qID === currentQuestionIndex )
+    checkAnwser(comparisonCorrectData[0].answerText, comparisonUserData[0].userAnswers)    
+    return
+  }
+
+  else if (answerListElements) {
     const resultOfChecked = ifUserAllreadyConfirmAnswer()
     if (resultOfChecked.length > 0) {
       markingConfirmedAns(resultOfChecked)
@@ -149,14 +160,13 @@ const reRenderCurrentQuestion = async (idx) => {
   }
 }
 
-
-
-
 //Функция проверки ответа проверяет 2 массива на соответсвие друг другу
 const checkAnwser = (correct, user) => {
+  console.log(correct, user);
   correct.forEach(i => {
     document.querySelector(`[data-answer-index="${i}"]`).classList.add('question-body__item-correct')
   })
+
   if (correct.length === user.length) {
     console.log("Длина одинаковая");
     console.log("Далее сравниваем по соответствию...");
@@ -164,7 +174,7 @@ const checkAnwser = (correct, user) => {
     if (result.length === 0) {
       console.log("Ответ верен!");
     } else if (result.length > 0) {
-      console.log('Есть над чем еще поработать!');
+      console.log('Есть над чем еще поработать!!!!');
       result.forEach(i => {
         document.querySelector(`[data-answer-index="${i}"]`).classList.add('question-body__item-wrong')
       })
@@ -207,9 +217,18 @@ nextBtn.addEventListener('click', async () => {
   await reRenderCurrentQuestion(currentQuestionIndex)
 
 })
+function checkLength() {
+  let someVar = getLocalStorage('userData')
+  console.log(someVar.length);
+}
 
-submitBtn.addEventListener('click', () => {
+
+
+submitBtn.addEventListener('click', () => {  
   const checkedAnswer = document.querySelectorAll('.question-body__item-checked')
+  if (!(getLocalStorage('userData').length === getLocalStorage('allQuestion').length )) {
+    
+  
   if (checkedAnswer.length > 0) {
     let userAnswers = [];
     checkedAnswer.forEach(item => {
@@ -219,14 +238,85 @@ submitBtn.addEventListener('click', () => {
     currentQuestionUserData.qID = currentQuestionData.qID;
     currentQuestionUserData.userAnswers = userAnswers;
     if (ifUserAllreadyConfirmAnswer().length > 0) {
-      console.log('На этот вопрос уже ответили!');
       return;
     } else {
       appendToStorage('userData', currentQuestionUserData);
     }
   } else {
     alert('Выберите вариант ответа!')
+    return
+  }
+  if (currentQuestionIndex + 1 === questionLenght) {  
+    reRenderCurrentQuestion(currentQuestionIndex)
+    return 
   }
   currentQuestionIndex++;
   reRenderCurrentQuestion(currentQuestionIndex)
+ } 
 })
+
+function clearStorage() {
+  window.localStorage.clear()
+}
+
+function finishTest() {
+  //Блок формирует из localStorage переменные с ответами (правильные и пользовательские)
+  let userAnswers = getLocalStorage('userData');
+  const questionsDataFromStorage = getLocalStorage('allQuestion')  
+  let correctData = [];
+  let correctAns = []
+  questionsDataFromStorage.forEach(item => {
+   delete item.questionCharpter
+   delete item.questionText
+   delete item.questionName
+   item.answerText.forEach(i => {
+     if (i.isCorrect === "true") {      
+      correctAns.push(+i.num)
+     }
+   })
+   item.answerText = correctAns
+   correctData.push(item)
+   correctAns = []
+  })
+  if (userAnswers.length != correctData.length) {
+    let alreadyChecked = []
+    userAnswers.forEach(i => {
+      alreadyChecked.push(i.qID)
+    })
+    correctData.forEach( itm => {
+        if (!alreadyChecked.includes(itm.qID)) {
+        userAnswers.push(
+          {
+            qID : itm.qID,
+             userAnswers: []
+            }
+        )
+      }
+    })
+  }
+  return {'userAnswers': userAnswers, 'correctData': correctData}
+
+
+
+
+}
+
+const clearStorageBtn = document.querySelector('.btn-1');
+const endTestBtn = document.querySelector('.btn-2');
+const someOneBtn = document.querySelector('.btn-3');
+
+someOneBtn.addEventListener('click', () => {
+  checkLength()
+})
+
+clearStorageBtn.addEventListener('click', () => {
+  clearStorage()  
+})
+
+endTestBtn.addEventListener('click', () => {
+  finished = true;
+  reRenderCurrentQuestion(currentQuestionIndex)
+})
+
+
+
