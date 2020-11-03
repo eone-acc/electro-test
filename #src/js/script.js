@@ -5,6 +5,7 @@ import {
 
 const dbUrl = '../db/db.json';
 
+let quantityInOneTest = 10; //количество вопросов в одном тесте
 let currentQuestionIndex = 0;
 let answerListElements;
 
@@ -20,7 +21,8 @@ const pushDataOfDBToStorage = async () => {
   await fetch(dbUrl)
     .then(res => res.json())
     .then(data => {
-      let questionData = [];
+      let questionData = []; //вся база с вопросами
+      let questionDataToTest = []; //вопросы в тест
       let idx = 0;
       data.forEach(item => {
         item.data.forEach((q) => {
@@ -30,7 +32,19 @@ const pushDataOfDBToStorage = async () => {
           questionData.push(q)
         })
       })
-      setLocalStorage("allQuestion", questionData)
+
+      for (let i in [...Array(quantityInOneTest).keys()]) {
+        let item = questionData[Math.floor(Math.random() * questionData.length)]
+        if (questionDataToTest.includes(item)) {
+          console.log('Уже есть!');
+          item = questionData[Math.floor(Math.random() * questionData.length)]
+
+        }
+        questionDataToTest.push(item)
+      }
+      console.log('questionDataToTest', questionDataToTest);
+
+      setLocalStorage("allQuestion", questionDataToTest)
       return questionData;
     })
     .catch(err => console.log("Ошибка", err))
