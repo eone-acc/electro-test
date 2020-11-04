@@ -6,12 +6,12 @@ import {
 const dbUrl = '../db/db.json';
 
 let quantityInOneTest = 10; //количество вопросов в одном тесте
-let currentQuestionIndex = 0;
+let currentQuestionIndex = 0; //индекс текущего вопроса из списка вопросов текущего теста
 let answerListElements;
 
-let currentQuestionData = {};
+let currentQuestionData = {};  //данные тещего вопроса из бд
 
-let currentQuestionUserData = {
+let currentQuestionUserData = {  //переменная, которая хранит пользовательсую инфромацию по текущему вопросу
   // qID: {userAnswer: [],}
 }
 
@@ -44,22 +44,23 @@ const pushDataOfDBToStorage = async () => {
       }
       console.log('questionDataToTest', questionDataToTest);
 
-      setLocalStorage("allQuestion", questionDataToTest)
+      setLocalStorage("allQuestion", questionDataToTest)      
       return questionData;
     })
     .catch(err => console.log("Ошибка", err))
 }
 
-pushDataOfDBToStorage();
-
-const storageData = getLocalStorage("allQuestion");
-const questionLenght = storageData.length;
+if(getLocalStorage("allQuestion").length === 0) {
+  pushDataOfDBToStorage();
+}
+const storageData = getLocalStorage("allQuestion"); //объявляем переменную в которую помещаем данные с вопросами из losalStorage 
+const questionLenght = storageData.length; //узнаем количество вопросов в текущем тесте по длине списка объектов с вопросами 
 
 
 //Функция которая проверяет получен ли ответ на текущий вопрос
 function ifUserAllreadyConfirmAnswer() {
-  const userDataFromStorage = getLocalStorage('userData')
-  const currenstFromUserDataFromStorage = userDataFromStorage.filter(item => item.qID === currentQuestionIndex)
+  const userDataFromStorage = getLocalStorage('userData')  //получаем данные ответов пользователя из localStorage 
+  const currenstFromUserDataFromStorage = userDataFromStorage.filter(item => item.qID === currentQuestionData.qID)
   return currenstFromUserDataFromStorage
 }
 
@@ -100,7 +101,7 @@ async function appendToStorage(storageDataKey, storageDataValue) {
 //Функция, которая рендерит блок с вопросом. Принимает в качестве данных объект вопроса
 const renderQuestion = async (data) => {
 
-  currentQuestionData.qID = data.qID;
+  currentQuestionData.qID = data.qID;  
   let correctAnswer = [];
   data.answerText.forEach((item, idx) => {
     if (item.isCorrect === 'true') {
@@ -149,10 +150,13 @@ const reRenderCurrentQuestion = async (idx) => {
   }
   await renderQuestion(storageData[idx])
   answerListElements = document.querySelectorAll('.question-body__item')
-
-  if (finished) {
-    const comparisonUserData = await finishTest().userAnswers.filter(i => i.qID === currentQuestionIndex )
-    const comparisonCorrectData = await finishTest().correctData.filter(i => i.qID === currentQuestionIndex )
+  //Проверяем нет завершен ли тест 
+  if (finished) { 
+    //Получаем данные из ответов пользователя по qID текущего отрендеренного вопроса
+    const comparisonUserData = await finishTest().userAnswers.filter(i => i.qID === currentQuestionData.qID ); 
+    //Получаем данные из ответов БД по qID текущего отрендеренного вопроса
+    const comparisonCorrectData = await finishTest().correctData.filter(i => i.qID === currentQuestionData.qID );
+    //Запускае проверку правильности ответов 
     checkAnwser(comparisonCorrectData[0].answerText, comparisonUserData[0].userAnswers)    
     return
   }
@@ -176,38 +180,38 @@ const reRenderCurrentQuestion = async (idx) => {
 
 //Функция проверки ответа проверяет 2 массива на соответсвие друг другу
 const checkAnwser = (correct, user) => {
-  console.log(correct, user);
+  // console.log(correct, user); //Вывод в консоль сравнения результатов
   correct.forEach(i => {
     document.querySelector(`[data-answer-index="${i}"]`).classList.add('question-body__item-correct')
   })
 
   if (correct.length === user.length) {
-    console.log("Длина одинаковая");
-    console.log("Далее сравниваем по соответствию...");
+    // console.log("Длина одинаковая");  //Вывод в консоль сравнения результатов
+    // console.log("Далее сравниваем по соответствию..."); //Вывод в консоль сравнения результатов
     let result = user.filter(i => !correct.includes(i))
     if (result.length === 0) {
-      console.log("Ответ верен!");
+      // console.log("Ответ верен!"); //Вывод в консоль сравнения результатов
     } else if (result.length > 0) {
-      console.log('Есть над чем еще поработать!!!!');
+      // console.log('Есть над чем еще поработать!!!!'); //Вывод в консоль сравнения результатов
       result.forEach(i => {
         document.querySelector(`[data-answer-index="${i}"]`).classList.add('question-body__item-wrong')
       })
     }
 
   } else {
-    console.log("Длина разная");
-    console.log("Далее сравниваем по соответствию...");
+    // console.log("Длина разная"); //Вывод в консоль сравнения результатов
+    // console.log("Далее сравниваем по соответствию..."); //Вывод в консоль сравнения результатов
     let result = user.filter(i => !correct.includes(i))
     result.forEach(i => {
       document.querySelector(`[data-answer-index="${i}"]`).classList.add('question-body__item-wrong')
     })
-    console.log('Есть над чем еще поработать!');
+    // console.log('Есть над чем еще поработать!'); //Вывод в консоль сравнения результатов
   }
 }
 
 reRenderCurrentQuestion(currentQuestionIndex)
 
-
+// присваиваем переменных кнопки управления из верски 
 const prevBtn = document.querySelector('.prev-btn')
 const nextBtn = document.querySelector('.next-btn')
 const submitBtn = document.querySelector('.submit-btn')
@@ -239,33 +243,35 @@ function checkLength() {
 
 
 submitBtn.addEventListener('click', () => {  
-  const checkedAnswer = document.querySelectorAll('.question-body__item-checked')
-  if (!(getLocalStorage('userData').length === getLocalStorage('allQuestion').length )) {
-    
-  
-  if (checkedAnswer.length > 0) {
-    let userAnswers = [];
-    checkedAnswer.forEach(item => {
-      userAnswers.push(+item.dataset.answerIndex)
-    })
-
-    currentQuestionUserData.qID = currentQuestionData.qID;
-    currentQuestionUserData.userAnswers = userAnswers;
-    if (ifUserAllreadyConfirmAnswer().length > 0) {
-      return;
+  const checkedAnswer = document.querySelectorAll('.question-body__item-checked') //выбираем все отмеченные ответы в переменную
+  if (!(getLocalStorage('userData').length === getLocalStorage('allQuestion').length ))
+  {
+    //Если пользователь отметил вариант ответа - тогда создаем список, с каждого элемента считываем dataset атрибут и заносим его в список
+    if (checkedAnswer.length > 0) {    
+      let userAnswers = [];
+      checkedAnswer.forEach(item => {
+        userAnswers.push(+item.dataset.answerIndex)
+      })
+      currentQuestionUserData = {};
+      console.log('Состояние переменной currentQuestionUserData на начало', currentQuestionUserData);
+      console.log('qID вопроса из localStorage', currentQuestionData.qID);
+      currentQuestionUserData.qID = currentQuestionData.qID; //присваиваем qID в currentQuestionUserData
+      currentQuestionUserData.userAnswers = userAnswers; //добавляем в переменную currentQuestionUserData ответы пользователя
+      if (ifUserAllreadyConfirmAnswer().length > 0) {
+        return;
+      } else {
+        appendToStorage('userData', currentQuestionUserData);
+      }
     } else {
-      appendToStorage('userData', currentQuestionUserData);
+      alert('Выберите вариант ответа!')
+      return
     }
-  } else {
-    alert('Выберите вариант ответа!')
-    return
-  }
-  if (currentQuestionIndex + 1 === questionLenght) {  
+    if (currentQuestionIndex + 1 === questionLenght) {  
+      reRenderCurrentQuestion(currentQuestionIndex)
+      return 
+    }
+    currentQuestionIndex++;
     reRenderCurrentQuestion(currentQuestionIndex)
-    return 
-  }
-  currentQuestionIndex++;
-  reRenderCurrentQuestion(currentQuestionIndex)
  } 
 })
 
@@ -332,5 +338,27 @@ endTestBtn.addEventListener('click', () => {
   reRenderCurrentQuestion(currentQuestionIndex)
 })
 
+//Функция таймера
+const timerShow = document.querySelector('.timer');
+let totalTimer = 20; //Секунды таймера
+const timer = setInterval(function () {
+  let seconds = totalTimer%60 // Получаем секунды
+  let minutes = totalTimer/60%60 // Получаем минуты
+  let hour = totalTimer/60/60%60 // Получаем часы
+  // Условие если время закончилось то...
+  if (totalTimer <= 0) {
+      // Таймер удаляется
+      clearInterval(timer);
+      // Выводит сообщение что время закончилось
+      finished = true;
+      reRenderCurrentQuestion(currentQuestionIndex)
+      timerShow.innerHTML = '';
 
-
+  } else { // Иначе
+      // Создаём строку с выводом времени
+      let strTimer = `${Math.trunc(hour)}:${Math.trunc(minutes)}:${seconds}`;
+      // Выводим строку в блок для показа таймера
+      timerShow.innerHTML = strTimer;
+  }
+  --totalTimer; // Уменьшаем таймер
+}, 1000)
