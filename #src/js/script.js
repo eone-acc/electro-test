@@ -5,9 +5,16 @@ import {
 
 const dbUrl = '../db/db.json';
 
+let testSettings = {    //пользовательские переменные теста
+  name: 'user',
+  time: 10,
+  questionQueantity: 10,
+}
+
 let quantityInOneTest = 10; //количество вопросов в одном тесте
 let currentQuestionIndex = 0; //индекс текущего вопроса из списка вопросов текущего теста
 let answerListElements;
+let timeToTestCompleate = testSettings.time //время в минутах на вылолнения теста 
 
 let currentQuestionData = {};  //данные тещего вопроса из бд
 
@@ -16,6 +23,14 @@ let currentQuestionUserData = {  //переменная, которая хран
 }
 
 let finished = false; //отвечает за завещрение логики теста
+
+
+
+if (getLocalStorage('testSettings')) {
+  testSettings = getLocalStorage('testSettings')
+}
+
+
 
 const pushDataOfDBToStorage = async () => {
   await fetch(dbUrl)
@@ -326,7 +341,7 @@ const endTestBtn = document.querySelector('.btn-2');
 const someOneBtn = document.querySelector('.btn-3');
 
 someOneBtn.addEventListener('click', () => {
-  checkLength()
+  setLocalStorage('timerSet', new Date().getTime()+timeToTestCompleate*60*1000)   //Записываем в localStorage время запуска таймера
 })
 
 clearStorageBtn.addEventListener('click', () => {
@@ -340,7 +355,7 @@ endTestBtn.addEventListener('click', () => {
 
 //Функция таймера
 const timerShow = document.querySelector('.timer');
-let totalTimer = 20; //Секунды таймера
+let totalTimer = Math.round((getLocalStorage('timerSet') - new Date().getTime())/1000); //Секунды таймера
 const timer = setInterval(function () {
   let seconds = totalTimer%60 // Получаем секунды
   let minutes = totalTimer/60%60 // Получаем минуты
@@ -356,9 +371,21 @@ const timer = setInterval(function () {
 
   } else { // Иначе
       // Создаём строку с выводом времени
-      let strTimer = `${Math.trunc(hour)}:${Math.trunc(minutes)}:${seconds}`;
+      if (totalTimer < 60) {
+        timerShow.style.color = 'red'
+      }
+      let strTimer = `${Math.trunc(minutes) < 10 ? '0' + Math.trunc(minutes) : Math.trunc(minutes)}:${seconds < 10 ? '0' + seconds : seconds}`;
       // Выводим строку в блок для показа таймера
       timerShow.innerHTML = strTimer;
   }
   --totalTimer; // Уменьшаем таймер
 }, 1000)
+
+
+//Функционал меню настроек
+const settingsButton = document.querySelector('.nav__settings')
+const settingsBlock = document.querySelector('.settings')
+
+settingsButton.addEventListener('click', () => {
+  settingsBlock.classList.toggle('settings-active')
+})

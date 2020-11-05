@@ -187,3 +187,68 @@ body {
 .btn-3 {
   margin-left: 10px;
 }
+
+/* Меню настроек */
+
+.settings {
+  position: absolute;
+  opacity: 0;
+  top: 100%;
+  right: 10px;
+  z-index: 99;
+  background-color:  #0EB7A3;
+  padding: 20px;
+  border-radius: 0 0 10px 10px;
+  overflow: hidden;
+  transition: all 1000ms;
+  display: none;
+}
+
+.settings-active {  
+  display: block;
+  opacity: 1;
+
+}
+.settings__stats {
+}
+.settings__header-text {
+}
+.settings__total-complete {
+}
+.settings__average-score {
+}
+.settings__last-result {
+}
+.settings__test-data {
+  margin-top: 20px;
+  border-top: 2px solid #fff;
+  padding-top: 20px;
+  display: flex;
+  flex-direction: column;
+  
+}
+.settings__user-name {
+  display: flex;
+  justify-content:space-between;
+  margin-bottom: 10px;
+}
+.settings__question-quantity {
+  display: flex;
+  justify-content:space-between;
+  margin-bottom: 10px;
+}
+.settings__test-time {
+  display: flex;
+  justify-content:space-between;
+  margin-bottom: 10px;
+}
+.save-settings {
+  width: 49%;
+  color: #fff;
+  background-color: red;
+}
+.reset-settings {
+  width: 49%;
+  color: #fff;
+  background-color: red;
+}
