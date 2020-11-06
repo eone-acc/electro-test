@@ -177,81 +177,6 @@ body {
   font-size: 16px;
   
 }
-.btn-1 {
-  
-}
-.btn-2 {
-  margin-left: 10px;
-  
-}
-.btn-3 {
-  margin-left: 10px;
-}
-
-/* Меню настроек */
-
-.settings {
-  position: absolute;
-  opacity: 0;
-  top: 100%;
-  right: 10px;
-  z-index: 99;
-  background-color:  #0EB7A3;
-  padding: 20px;
-  border-radius: 0 0 10px 10px;
-  overflow: hidden;
-  transition: all 1000ms;
-  display: none;
-}
-
-.settings-active {  
-  display: block;
-  opacity: 1;
-
-}
-.settings__stats {
-}
-.settings__header-text {
-}
-.settings__total-complete {
-}
-.settings__average-score {
-}
-.settings__last-result {
-}
-.settings__test-data {
-  margin-top: 20px;
-  border-top: 2px solid #fff;
-  padding-top: 20px;
-  display: flex;
-  flex-direction: column;
-  
-}
-.settings__user-name {
-  display: flex;
-  justify-content:space-between;
-  margin-bottom: 10px;
-}
-.settings__question-quantity {
-  display: flex;
-  justify-content:space-between;
-  margin-bottom: 10px;
-}
-.settings__test-time {
-  display: flex;
-  justify-content:space-between;
-  margin-bottom: 10px;
-}
-.save-settings {
-  width: 49%;
-  color: #fff;
-  background-color: red;
-}
-.reset-settings {
-  width: 49%;
-  color: #fff;
-  background-color: red;
-}
 
 
 /* Блок управления */
@@ -263,6 +188,23 @@ body {
   position: relative;
   margin-top: 10px;
   border-radius: 5px;
+}
+
+.controll-block--zoomed {
+  
+  position: absolute !important;
+  top: 50vh;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 50px;
+  z-index: 999;
+}
+.controll-block--zoomed > .controll-block__button{
+  font-size: 36px;
+}
+
+.controll-block--zoomed > .timer {
+  display: none;
 }
 
 .controll-block__button {
@@ -296,6 +238,7 @@ body {
   color: #000;
   font-size: 16px;
   line-height: 16px;
+  background-color: grey;
 
 
 }
