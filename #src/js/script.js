@@ -5,11 +5,97 @@ import {
 
 const dbUrl = '../db/db.json';
 
-let testSettings = {    //пользовательские переменные теста
-  name: 'user',
-  time: 10,
-  questionQueantity: 10,
+const userName = document.querySelector('.nav__user-info'), //получаем элемент страницы с именем пользователя
+userFormName = document.querySelector('.settings__user-name'),
+userFormQuestionQuantity = document.querySelector('.settings__question-quantity'),
+userFormTimeToTest = document.querySelector('.settings__test-time'),
+totalTestCompleate = document.querySelector('.settings__total-complete'),
+averageScore = document.querySelector('.settings__average-score'),
+lastTestScore =document.querySelector('.settings__last-result'),
+controllButton = document.querySelector('.controll-block__button');
+
+
+/* Блок данных пользователя */
+let testSettings = {}   //пользовательские переменные теста
+
+
+function createNewUser () {
+  let userLocalData = {    //пользовательские переменные теста
+    name: prompt('Имя'),
+    time: 10,
+    questionQueantity: 10,
+    totalTestCompleate: 0,
+    averageScore: 0,
+    lastTestScore: [0, 0],
+    testedNow: false
+  }
+  setLocalStorage('userLocalData', userLocalData)
 }
+
+
+let storageData = getLocalStorage("allQuestion"); //объявляем переменную в которую помещаем данные с вопросами из losalStorage 
+
+//проверка наличия пользовательских данных в localStorage
+if (getLocalStorage('userLocalData').length === 0) {
+  /*запустить функцию, которая вызовет виджет ввода имени пользователя
+  после чего создаст в localStorage нового юзера с стандартными настройками 
+  */
+ createNewUser()
+}
+
+//в противном случае получаем данные для последующего рендера
+else {   
+  testSettings =  getLocalStorage('userLocalData')
+  userName.innerText = testSettings.name
+  userFormName.querySelector('input').value = testSettings.name
+  userFormQuestionQuantity.querySelector('input').value = testSettings.questionQueantity
+  userFormTimeToTest.querySelector('input').value = testSettings.time
+  totalTestCompleate.innerText = `Пройдено раз: ${testSettings.totalTestCompleate}`
+  averageScore.innerText = `Средний бал: ${testSettings.averageScore}`  
+  lastTestScore.innerText = `Релультат последнего теста: ${testSettings.lastTestScore[0]} из ${testSettings.lastTestScore[0]}`
+
+  
+  if (getLocalStorage('userLocalData').testedNow === false) {
+    controllButton.innerText = 'Начать'
+  } else {
+    controllButton.innerText = 'Завершить'
+  }
+
+  controllButton.addEventListener('click', async (e) => {
+    let testSettings = getLocalStorage('userLocalData');
+    console.log("status NOW", testSettings.testedNow);
+    console.log(currentQuestionIndex);
+      if(testSettings.testedNow === false) {
+      
+      setLocalStorage('timerSet', new Date().getTime()+timeToTestCompleate*60*1000);   //Записываем в localStorage время запуска таймера
+      localStorage.removeItem('allQuestion'); //удаляем старые вопросы из localStorage
+      localStorage.removeItem('userData'); //Убаляем ответы пользователя из предыдущего теста
+      pushDataOfDBToStorage(); 
+      storageData = await getLocalStorage("allQuestion")
+      console.log();
+      testSettings.testedNow = true
+      setLocalStorage('userLocalData', testSettings)
+      controllButton.innerText = 'Завершить';
+      console.log("!!!",currentQuestionIndex);
+      reRenderCurrentQuestion(0);
+
+      console.log('start');
+
+    } else if (testSettings.testedNow === true) {
+      totalTimer = 0;
+      finished = true;
+      reRenderCurrentQuestion(currentQuestionIndex)
+      controllButton.innerText = 'Начать';
+      testSettings.testedNow = false;
+      setLocalStorage('userLocalData', testSettings)
+      console.log('stop');
+    }
+  })
+  
+}
+
+
+
 
 let quantityInOneTest = 10; //количество вопросов в одном тесте
 let currentQuestionIndex = 0; //индекс текущего вопроса из списка вопросов текущего теста
@@ -50,25 +136,20 @@ const pushDataOfDBToStorage = async () => {
 
       for (let i in [...Array(quantityInOneTest).keys()]) {
         let item = questionData[Math.floor(Math.random() * questionData.length)]
+        //проверяем на наличие повторяющихся вопросов в списке тестов
         if (questionDataToTest.includes(item)) {
-          console.log('Уже есть!');
           item = questionData[Math.floor(Math.random() * questionData.length)]
-
         }
         questionDataToTest.push(item)
       }
-      console.log('questionDataToTest', questionDataToTest);
-
-      setLocalStorage("allQuestion", questionDataToTest)      
+      setLocalStorage("allQuestion", questionDataToTest)
+      console.log(questionDataToTest);      
       return questionData;
     })
     .catch(err => console.log("Ошибка", err))
 }
 
-if(getLocalStorage("allQuestion").length === 0) {
-  pushDataOfDBToStorage();
-}
-const storageData = getLocalStorage("allQuestion"); //объявляем переменную в которую помещаем данные с вопросами из losalStorage 
+
 const questionLenght = storageData.length; //узнаем количество вопросов в текущем тесте по длине списка объектов с вопросами 
 
 
@@ -115,7 +196,6 @@ async function appendToStorage(storageDataKey, storageDataValue) {
 
 //Функция, которая рендерит блок с вопросом. Принимает в качестве данных объект вопроса
 const renderQuestion = async (data) => {
-
   currentQuestionData.qID = data.qID;  
   let correctAnswer = [];
   data.answerText.forEach((item, idx) => {
@@ -124,8 +204,6 @@ const renderQuestion = async (data) => {
     }
   })
   currentQuestionData.correctAnswer = correctAnswer;
-
-
   const questionCard = document.querySelector('.question-block');
   questionCard.innerHTML = '';
   let renderItemQuestionBlock = '';
@@ -138,7 +216,6 @@ const renderQuestion = async (data) => {
       </div>
     `
   }
-
   let renderItem = ` 
     <div class="question-header">
       <div class="question-header__commit"><div class="question-header__tick"></div> </div>
@@ -224,7 +301,7 @@ const checkAnwser = (correct, user) => {
   }
 }
 
-reRenderCurrentQuestion(currentQuestionIndex)
+// reRenderCurrentQuestion(currentQuestionIndex)
 
 // присваиваем переменных кнопки управления из верски 
 const prevBtn = document.querySelector('.prev-btn')
@@ -349,8 +426,7 @@ clearStorageBtn.addEventListener('click', () => {
 })
 
 endTestBtn.addEventListener('click', () => {
-  finished = true;
-  reRenderCurrentQuestion(currentQuestionIndex)
+  
 })
 
 //Функция таймера
@@ -366,7 +442,9 @@ const timer = setInterval(function () {
       clearInterval(timer);
       // Выводит сообщение что время закончилось
       finished = true;
-      reRenderCurrentQuestion(currentQuestionIndex)
+      if(currentQuestionData.length > 0) {
+        reRenderCurrentQuestion(currentQuestionIndex) 
+      }
       timerShow.innerHTML = '';
 
   } else { // Иначе
@@ -376,7 +454,7 @@ const timer = setInterval(function () {
       }
       let strTimer = `${Math.trunc(minutes) < 10 ? '0' + Math.trunc(minutes) : Math.trunc(minutes)}:${seconds < 10 ? '0' + seconds : seconds}`;
       // Выводим строку в блок для показа таймера
-      timerShow.innerHTML = strTimer;
+      timerShow.innerHTML = `<span>${strTimer}</span>`;
   }
   --totalTimer; // Уменьшаем таймер
 }, 1000)

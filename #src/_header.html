@@ -1,13 +1,16 @@
 <header class="header" id="header">
   <div class="__container">
     <nav class="nav">    
-      <div class="nav__title">Электробезопасность.Тестирование</div>
-      <div class="timer"></div>
-      <div class="nav__user-info">User</div>
+      <div class="nav__title">Электробезопасность.Тестирование</div>      
+      <div class="nav__user-info"></div>
       <div class="nav__settings">
         <img src="img/nav-settings.svg" alt="">
       </div>
     </nav>
+    <div class="controll-block">
+      <button class="controll-block__button" data-status = "start">Завершить</button>
+      <div class="timer"></div>
+    </div>
     @@include('_user-settings.html')
   </div>
 </header>
